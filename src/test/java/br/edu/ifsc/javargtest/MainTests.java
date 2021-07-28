@@ -1,4 +1,3 @@
-
 package br.edu.ifsc.javargtest;
 
 import com.github.javaparser.StaticJavaParser;
@@ -211,7 +210,7 @@ public class MainTests {
         return true;
     } 
     
-    @Property(tries = 10)
+    @Property(tries = 1000)
     boolean checkGenExpression() {
         JRGLog.showMessage(Severity.MSG_XDEBUG, "checkGenExpression::inicio");
         
