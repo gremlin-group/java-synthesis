@@ -95,9 +95,9 @@ public class JRGCore {
                     cand.add(Arbitraries.oneOf(genMethodInvokation(t)));
                 }
                 // Verifica se existem candidados cast
-                //if (!t.isPrimitiveType() && !mCT.subTypes2(t.asString()).isEmpty()) {
-                //    cand.add(Arbitraries.oneOf(genUpCast(t)));
-                //}                
+                if (!t.isPrimitiveType() && !mCT.subTypes2(t.asString()).isEmpty()) {
+                    cand.add(Arbitraries.oneOf(genUpCast(t)));
+                }                
                 // Verifica se existem candidados Var
                 if (!mCtx.isEmpty()) {
                    cand.add(Arbitraries.oneOf(genVar(t)));                  
@@ -114,14 +114,13 @@ public class JRGCore {
                     // Candidatos de construtores
                     cand.add(Arbitraries.oneOf(genObjectCreation(t)));                    
                 }
-                System.out.println("ELSE: " + t.asString() + " CAND: " +cand.size());
             }
         } catch (Exception ex) {
-            JRGLog.showMessage(JRGLog.Severity.MSG_ERROR, "genExpression::ERROR = " + ex.getMessage());
-            
+            JRGLog.showMessage(JRGLog.Severity.MSG_ERROR, "genExpression::ERROR = " + ex.getMessage());            
         }
-        System.out.println("QUANTIDADE DE CANDIDATOS: " + cand.size() + " TYPE: "
-        + t.asString() + " mFUEL: " + mFuel);
+        
+        JRGLog.showMessage(JRGLog.Severity.MSG_INFO, "QUANTIDADE DE CANDIDATOS: " + cand.size() + " TYPE: "                
+                        + t.asString() + " mFUEL: " + mFuel);
         return Arbitraries.oneOf(cand);
     }
 

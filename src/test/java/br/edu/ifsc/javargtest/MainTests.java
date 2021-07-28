@@ -211,7 +211,7 @@ public class MainTests {
         return true;
     } 
     
-    @Property(tries = 5)
+    @Property(tries = 10)
     boolean checkGenExpression() {
         JRGLog.showMessage(Severity.MSG_XDEBUG, "checkGenExpression::inicio");
         
