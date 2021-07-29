@@ -16,7 +16,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.WhileStmt;
-import net.jqwik.api.lifecycle.BeforeProperty;
+import net.jqwik.api.lifecycle.BeforeTry;
 
 /**
  *
@@ -48,9 +48,9 @@ public class MainTests {
      
     }
     
-    @BeforeProperty
-    public void createObjects() {
-         mCT = new ClassTable(loadImports());
+    @BeforeTry
+    public void createObjects() {        
+        mCT = new ClassTable(loadImports());
         
         mBase = new JRGBase(mCT);
         
@@ -213,8 +213,6 @@ public class MainTests {
     @Property(tries = 1000)
     boolean checkGenExpression() {
         JRGLog.showMessage(Severity.MSG_XDEBUG, "checkGenExpression::inicio");
-        
-        mCore.resetFuel();
         
         Arbitrary<Expression> e = mCore.genExpression(
                 ReflectParserTranslator.reflectToParserType("int"));      

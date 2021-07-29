@@ -58,12 +58,7 @@ public class JRGCore {
         };
 
         mValidNames = Arrays.asList("a", "b", "c", "d", "e", "f", "g");
-
-        resetFuel();
-
-    }
-    
-    public void resetFuel() {
+        
         mFuel = FUEL_START;
     }
     
