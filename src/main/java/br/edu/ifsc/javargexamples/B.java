@@ -25,7 +25,7 @@ public class B {
         this.b = b;
     }
     
-    public int getB(int b) {
+    public int getB() {
         return b;
     }
     

@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
+import net.jqwik.api.JqwikException;
 import net.jqwik.api.Provide;
 
 /**
@@ -66,56 +67,64 @@ public class JRGCore {
     public Arbitrary<Expression> genExpression(Type t) {
         Arbitrary<Expression> e;
         List<Arbitrary<Expression>> cand = new ArrayList<>();
+
         try {
-            
-            if (mFuel > 0) {
-                
-                 mFuel--;
+
+            if (mFuel > 0) { // Permite a recursão até certo ponto
+                mFuel--;
+
                 // Candidatos de tipos primitivos
-                if (t.isPrimitiveType()) {
-                    cand.add(Arbitraries.oneOf(mBase.genPrimitiveType(
-                    t.asPrimitiveType())));
-                }
-                // Se não for tipo primitivo
-                if (!t.isPrimitiveType()) {
-                //Candidatos de construtores
-                    cand.add(Arbitraries.oneOf(genObjectCreation(t)));
-                }
-                // Verifica se existem atributos candidatos
-                if (!mCT.getCandidateFields(t.asString()).isEmpty()) {
-                    cand.add(Arbitraries.oneOf(genAttributeAccess(t)));
-                }
-                //Verifica se existem candidados methods
-                if (!mCT.getCandidateMethods(t.asString()).isEmpty()) {
-                    cand.add(Arbitraries.oneOf(genMethodInvokation(t)));
-                }
-                // Verifica se existem candidados cast
-                if (!t.isPrimitiveType() && !mCT.subTypes2(t.asString()).isEmpty()) {
-                    cand.add(Arbitraries.oneOf(genUpCast(t)));
-                }                
-                // Verifica se existem candidados Var
-                if (!mCtx.isEmpty()) {
-                   cand.add(Arbitraries.oneOf(genVar(t)));                  
-                }
-                
-            } else {
-                
                 if (t.isPrimitiveType()) {
                     cand.add(Arbitraries.oneOf(mBase.genPrimitiveType(
                             t.asPrimitiveType())));
                 }
+
                 // Se não for tipo primitivo
                 if (!t.isPrimitiveType()) {
-                    // Candidatos de construtores
-                    cand.add(Arbitraries.oneOf(genObjectCreation(t)));                    
+                    //Candidatos de construtores
+                    cand.add(Arbitraries.oneOf(genObjectCreation(t)));
+                }
+
+                // Verifica se existem atributos candidatos
+                if (!mCT.getCandidateFields(t.asString()).isEmpty()) {
+                    cand.add(Arbitraries.oneOf(genAttributeAccess(t)));
+                }
+
+                //Verifica se existem candidados methods
+                if (!mCT.getCandidateMethods(t.asString()).isEmpty()) {
+                    cand.add(Arbitraries.oneOf(genMethodInvokation(t)));
+                }
+
+                // Verifica se existem candidados cast
+                if (!t.isPrimitiveType() && !mCT.subTypes2(t.asString()).isEmpty()) {
+                    cand.add(Arbitraries.oneOf(genUpCast(t)));
+                }
+
+                // Verifica se existem candidados Var
+                if (mCtx.containsValue(t.asString())) {
+                    cand.add(Arbitraries.oneOf(genVar(t)));
+                }
+
+            } else { // Não permite aprofundar a recursão
+
+                if (t.isPrimitiveType()) {
+                    cand.add(Arbitraries.oneOf(mBase.genPrimitiveType(
+                            t.asPrimitiveType())));
+                }
+
+                if (!t.isPrimitiveType()) {
+                    cand.add(Arbitraries.oneOf(genObjectCreation(t)));
+                }
+                
+                if (mCtx.containsValue(t.asString())) {
+                    cand.add(Arbitraries.oneOf(genVar(t)));
                 }
             }
-        } catch (Exception ex) {
-            JRGLog.showMessage(JRGLog.Severity.MSG_ERROR, "genExpression::ERROR = " + ex.getMessage());            
+
+        } catch (ClassNotFoundException ex1) {
+            throw new RuntimeException("Error: class not found!");
         }
         
-        JRGLog.showMessage(JRGLog.Severity.MSG_INFO, "QUANTIDADE DE CANDIDATOS: " + cand.size() + " TYPE: "                
-                        + t.asString() + " mFUEL: " + mFuel);
         return Arbitraries.oneOf(cand);
     }
 
@@ -137,20 +146,14 @@ public class JRGCore {
     }
 
     @Provide
-    public Arbitrary<ObjectCreationExpr> genObjectCreation(Type t) {
+    //public Arbitrary<ObjectCreationExpr> genObjectCreation(Type t) throws ClassNotFoundException {
+    public Arbitrary<Expression> genObjectCreation(Type t) throws ClassNotFoundException {            
         JRGLog.showMessage(JRGLog.Severity.MSG_XDEBUG,
                 "genObjectCreation::inicio");
 
         List<Constructor> constrs;
         
-        try {
-            constrs = mCT.getClassConstructors(t.asString());
-        } catch (ClassNotFoundException e) {
-            JRGLog.showMessage(JRGLog.Severity.MSG_ERROR, "genObjectCreation"
-                    + "::invalido [" + t.asString() + "] = " + e.getMessage());
-
-            return null;
-        }
+        constrs = mCT.getClassConstructors(t.asString());
 
         Arbitrary<Constructor> c = Arbitraries.of(constrs);
 

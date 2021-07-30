@@ -121,7 +121,8 @@ public class MainTests {
         
         c.setName("br.edu.ifsc.javargexamples.B");              
         
-        Arbitrary<ObjectCreationExpr> e = mCore.genObjectCreation(c);
+        //Arbitrary<ObjectCreationExpr> e = mCore.genObjectCreation(c);
+        Arbitrary<Expression> e = mCore.genObjectCreation(c);
         
         if (e != null) {
             System.out.println("ObjectCreation gerado: " + 
@@ -214,10 +215,15 @@ public class MainTests {
     boolean checkGenExpression() {
         JRGLog.showMessage(Severity.MSG_XDEBUG, "checkGenExpression::inicio");
         
-        Arbitrary<Expression> e = mCore.genExpression(
-                ReflectParserTranslator.reflectToParserType("int"));      
-                
-        System.out.println("Expressão gerada: " + e.sample());
+        try {
+        
+            Arbitrary<Expression> e = mCore.genExpression(
+                    ReflectParserTranslator.reflectToParserType("int"));
+            System.out.println("Expressão gerada: " + e.sample());
+        } catch (Exception ex) {
+            System.out.println("Erro: " + ex.getMessage());
+            return false;
+        }
         
         JRGLog.showMessage(Severity.MSG_XDEBUG, "checkGenExpression::fim");
         
