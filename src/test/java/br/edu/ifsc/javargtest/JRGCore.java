@@ -1,17 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package br.edu.ifsc.javargtest;
 
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.CastExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.LambdaExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.Type;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
-import net.jqwik.api.JqwikException;
 import net.jqwik.api.Provide;
 
 /**
@@ -37,6 +35,8 @@ public class JRGCore {
     private ClassTable mCT;
 
     private JRGBase mBase;
+    
+     private JRGOperator mOperator;
 
     private Map<String, String> mCtx;
 
@@ -49,6 +49,8 @@ public class JRGCore {
 
         mBase = base;
 
+        mOperator = new JRGOperator(mCT , mBase , this);
+        
         mCtx = new HashMap<String, String>() {
             {
                 put("a", "int");
@@ -69,49 +71,58 @@ public class JRGCore {
         List<Arbitrary<Expression>> cand = new ArrayList<>();
 
         try {
-
             if (mFuel > 0) { // Permite a recursão até certo ponto
                 mFuel--;
-
+                
+                if (t.toString().equals(PrimitiveType.booleanType().asString())) {
+                    cand.add(Arbitraries.oneOf(mOperator.genLogiExpression(),
+                    mOperator.genRelaExpression()));
+                }
+                
                 // Candidatos de tipos primitivos
                 if (t.isPrimitiveType()) {
                     cand.add(Arbitraries.oneOf(mBase.genPrimitiveType(
-                            t.asPrimitiveType())));
+                            t.asPrimitiveType())));                    
+                }               
+                                
+                if (t.isPrimitiveType() && mBase.isNumericType(t)){
+                    cand.add(Arbitraries.oneOf(mOperator.genArithExpression(t)));
                 }
-
+                
                 // Se não for tipo primitivo
                 if (!t.isPrimitiveType()) {
-                    //Candidatos de construtores
+                //Candidatos de construtores
                     cand.add(Arbitraries.oneOf(genObjectCreation(t)));
                 }
-
+                
                 // Verifica se existem atributos candidatos
                 if (!mCT.getCandidateFields(t.asString()).isEmpty()) {
                     cand.add(Arbitraries.oneOf(genAttributeAccess(t)));
                 }
-
+                
                 //Verifica se existem candidados methods
                 if (!mCT.getCandidateMethods(t.asString()).isEmpty()) {
                     cand.add(Arbitraries.oneOf(genMethodInvokation(t)));
                 }
-
+                
                 // Verifica se existem candidados cast
                 if (!t.isPrimitiveType() && !mCT.subTypes2(t.asString()).isEmpty()) {
                     cand.add(Arbitraries.oneOf(genUpCast(t)));
                 }
-
+                
                 // Verifica se existem candidados Var
                 if (mCtx.containsValue(t.asString())) {
                     cand.add(Arbitraries.oneOf(genVar(t)));
                 }
 
             } else { // Não permite aprofundar a recursão
-
+                
                 if (t.isPrimitiveType()) {
                     cand.add(Arbitraries.oneOf(mBase.genPrimitiveType(
-                            t.asPrimitiveType())));
+                            t.asPrimitiveType()))); 
+                    
                 }
-
+                
                 if (!t.isPrimitiveType()) {
                     cand.add(Arbitraries.oneOf(genObjectCreation(t)));
                 }
@@ -310,6 +321,23 @@ public class JRGCore {
         upCast = mCT.subTypes2(type);
 
         return Arbitraries.of(upCast);
+    }
+    
+    @Provide
+    public Arbitrary<LambdaExpr> genLambdaExpr()
+            throws ClassNotFoundException {
+        Arbitrary<PrimitiveType> pt = mBase.primitiveTypes().map(
+                t -> new PrimitiveType(t));
+        
+        Arbitrary<Type> t = Arbitraries.oneOf(mBase.classOrInterfaceTypes(), pt);
+        
+        Type tp = t.sample();
+        
+        Arbitrary<Expression> e = genExpression(tp);
+        
+        String a =  Arbitraries.of(mValidNames).sample();
+        
+        return e.map(obj -> new LambdaExpr(new Parameter(tp,a),obj));
     }
 
 }

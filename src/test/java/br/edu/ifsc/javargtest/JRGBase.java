@@ -14,6 +14,7 @@ import com.github.javaparser.ast.expr.LongLiteralExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
+import com.github.javaparser.ast.type.Type;
 import java.util.ArrayList;
 import java.util.List;
 import net.jqwik.api.Arbitraries;
@@ -61,6 +62,25 @@ public class JRGBase {
         return Arbitraries.of(PrimitiveType.Primitive.INT,PrimitiveType.Primitive.DOUBLE,
         PrimitiveType.Primitive.FLOAT,PrimitiveType.Primitive.LONG,
         PrimitiveType.Primitive.SHORT);
+    }
+    
+    public boolean isNumericType(Type t){
+        switch (t.asPrimitiveType().getType()) {
+            case DOUBLE:
+                return true;                 
+            case FLOAT:
+                return true; 
+            case INT:        
+                return true; 
+            case LONG:
+                return true; 
+            case BYTE:
+                return true; 
+            case SHORT:
+                 return true;  
+        }
+        
+        return false;
     }
     
     @Provide

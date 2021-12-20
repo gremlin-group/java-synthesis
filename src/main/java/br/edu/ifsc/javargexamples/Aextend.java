@@ -12,7 +12,7 @@ package br.edu.ifsc.javargexamples;
 public class Aextend extends A{
     
     public Aextend(int a1, int a2) {
-        super(a1, a2);
+        super(a1, a2, true);
     }
     
 }

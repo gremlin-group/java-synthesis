@@ -11,10 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-/**
- *
- * @author samuel
- */
 public class ClassTable {
     
     private  List<String> mImports;
@@ -28,7 +24,7 @@ public class ClassTable {
         List<String> list = new ArrayList<>();
         
         for (String s : mImports) {
-            list.add(Class.forName(s).getSimpleName());
+            list.add(Class.forName(s).getName());
         }
         
         return list;
